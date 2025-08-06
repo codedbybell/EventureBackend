@@ -1,0 +1,13 @@
+# PyCharm project files
+.idea/
+
+# Python virtual environment
+venv/
+
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+
+# Django stuff
+db.sqlite3
+.env
