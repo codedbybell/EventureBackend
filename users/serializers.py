@@ -35,3 +35,29 @@ class UserDetailSerializer(serializers.ModelSerializer):
         model = CustomUser
         # Şifre gibi hassas bilgileri ASLA burada göstermeyiz.
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'university', 'department', 'grade']
+
+class ChangePasswordSerializer(serializers.Serializer):
+    """
+    Giriş yapmış kullanıcının şifresini değiştirmesi için serializer.
+    """
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+    new_password_confirm = serializers.CharField(required=True)
+
+    def validate_old_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("Eski şifreniz doğru değil.")
+        return value
+
+    def validate(self, data):
+        if data['new_password'] != data['new_password_confirm']:
+            raise serializers.ValidationError({"new_password": "Yeni şifreler uyuşmuyor."})
+        return data
+
+    def save(self, **kwargs):
+        password = self.validated_data['new_password']
+        user = self.context['request'].user
+        user.set_password(password)
+        user.save()
+        return user
