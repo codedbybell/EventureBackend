@@ -4,21 +4,33 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import CustomUser
 
-# CustomUser modelimizi admin paneline kaydediyoruz.
-# UserAdmin'i kullanarak Django'nun hazır admin arayüzünü miras alıyoruz
-# ve kendi ek alanlarımızı (university, department, grade) gösteriyoruz.
 
 class CustomUserAdmin(UserAdmin):
-    # Admin panelindeki kullanıcı listesinde görünecek alanlar
-    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'university')
+    # Bu sınıf, CustomUser modelinin admin panelinde nasıl görüneceğini yönetir.
+    model = CustomUser
 
-    # Kullanıcı oluşturma/düzenleme formunda alanları gruplamak için
-    # UserAdmin'in orijinal fieldset'lerini alıp kendi alanlarımızı ekliyoruz.
-    fieldsets = UserAdmin.fieldsets + (
-        ('Ek Bilgiler', {'fields': ('university', 'department', 'grade')}),
-    )
-    add_fieldsets = UserAdmin.add_fieldsets + (
-        ('Ek Bilgiler', {'fields': ('university', 'department', 'grade')}),
+    # Admin panelindeki kullanıcı listesinde hangi alanların görüneceği.
+    # 'username' yerine 'email' gösteriyoruz.
+    list_display = ('email', 'first_name', 'last_name', 'is_staff', 'date_joined')
+
+    # Kullanıcıları neye göre sıralayacağımız.
+    # Artık 'username' olmadığı için 'email'e göre sıralıyoruz.
+    ordering = ('email',)  # <-- ASIL DEĞİŞİKLİK BURADA!
+
+    # Admin panelindeki kullanıcı düzenleme formunun yapısı.
+    # fieldsets içindeki 'username' referanslarını da 'email' olarak değiştirmeliyiz.
+    fieldsets = (
+        (None, {'fields': ('email', 'password')}),
+        ('Personal info', {'fields': ('first_name', 'last_name')}),
+        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
+        ('Important dates', {'fields': ('last_login', 'date_joined')}),
+        # Kendi eklediğimiz alanları da admin panelinde görmek istersek buraya ekleyebiliriz.
+        ('Custom Fields', {'fields': ('university', 'department', 'grade')}),
     )
 
+    # Admin panelindeki arama kutusunun hangi alanlarda arama yapacağı.
+    search_fields = ('email', 'first_name', 'last_name')
+
+
+# CustomUser modelimizi ve özel admin ayarlarımızı Django admin paneline kaydediyoruz.
 admin.site.register(CustomUser, CustomUserAdmin)
