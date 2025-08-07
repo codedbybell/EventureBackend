@@ -3,55 +3,66 @@
 from rest_framework import serializers
 from .models import CustomUser
 
-# --- DEĞİŞTİRİLDİ ---
-# Artık username yerine email ile kayıt oluyoruz.
+
 class UserRegisterSerializer(serializers.ModelSerializer):
-    # Kullanıcıdan şifreyi iki kez girmesini istiyoruz, doğrulama için.
+    """
+    Yeni kullanıcı kaydı için kullanılan serializer.
+    Sadece gerekli alanları (isim, e-posta, şifre) ister.
+    """
+    # Şifre doğrulaması için bu alan zorunludur.
     password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True, label="Confirm Password")
 
     class Meta:
         model = CustomUser
-        # API aracılığıyla hangi alanların alınıp verileceğini belirtiyoruz.
-        # 'username' alanı kaldırıldı, sadece 'email' kullanılıyor.
+
+        # --- DOĞRU FİELDS LİSTESİ BURADA ---
+        # Kayıt olurken kullanıcıdan sadece bu bilgileri istiyoruz.
         fields = ['email', 'password', 'password2', 'first_name', 'last_name']
+
         extra_kwargs = {
-            'password': {'write_only': True} # Şifrenin API cevabında geri dönmemesini sağlar.
+            # 'password' alanının API cevaplarında asla geri dönmemesini sağlar.
+            'password': {'write_only': True}
         }
 
-    # Bu fonksiyon, password ve password2'nin aynı olup olmadığını kontrol eder.
-    # Bu metodda bir değişiklik yapmaya gerek yok, aynı kalabilir.
     def validate(self, attrs):
+        # Şifrelerin eşleşip eşleşmediğini kontrol eder.
         if attrs['password'] != attrs['password2']:
             raise serializers.ValidationError({"password": "Şifreler uyuşmuyor."})
         return attrs
 
-    # Bu fonksiyon, veriler doğrulandıktan sonra kullanıcıyı nasıl oluşturacağımızı belirler.
-    # Bu metodda bir değişiklik yapmaya gerek yok, çünkü artık modelin `create_user` metodu
-    # email ile çalışacak şekilde ayarlandı.
     def create(self, validated_data):
-        # password2'yi veritabanına kaydetmeyeceğimiz için listeden çıkarıyoruz.
+        # 'password2' alanını modelde olmadığı için veriden çıkarıyoruz.
         validated_data.pop('password2')
-        # CustomUserManager'daki create_user metodunu kullanacak.
+        # Modelimizin kendi create_user metodu ile şifreyi hashleyerek kullanıcıyı oluşturuyoruz.
         user = CustomUser.objects.create_user(**validated_data)
         return user
 
 
-# --- DEĞİŞTİRİLDİ ---
-# Kullanıcı detaylarını gösterirken artık 'username' alanı yok.
 class UserDetailSerializer(serializers.ModelSerializer):
-    # Bu serializer, kullanıcının profil bilgilerini göstermek için kullanılacak.
+    """
+    Giriş yapmış kullanıcının profil bilgilerini göstermek ve güncellemek için kullanılır.
+    Hassas olmayan tüm kullanıcı bilgilerini içerir.
+    """
+
     class Meta:
         model = CustomUser
-        # Şifre gibi hassas bilgileri ASLA burada göstermeyiz.
-        # 'username' alanı kaldırıldı.
-        fields = ['id', 'email', 'first_name', 'last_name', 'university', 'department', 'grade']
+        # Kullanıcının profilinde görünecek ve güncellenebilecek tüm alanlar.
+        fields = [
+            'id',
+            'email',
+            'first_name',
+            'last_name',
+            'university',
+            'department',
+            'grade',
+            'profile_picture',
+            'bio'
+        ]
 
 
-# --- DEĞİŞİKLİK YOK ---
-# Bu serializer'da bir değişiklik gerekmiyor, çünkü mevcut kullanıcı üzerinden çalışıyor.
 class ChangePasswordSerializer(serializers.Serializer):
     """
-    Giriş yapmış kullanıcının şifresini değiştirmesi için serializer.
+    Giriş yapmış kullanıcının kendi şifresini değiştirmesi için serializer.
     """
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)

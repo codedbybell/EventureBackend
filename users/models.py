@@ -28,5 +28,8 @@ class CustomUser(AbstractUser):
     department = models.CharField(max_length=150, blank=True, null=True, verbose_name="Bölüm")
     grade = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name="Sınıf")
 
+    profile_picture = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
+    bio = models.TextField(max_length=250, blank=True, null=True)
+
     def __str__(self):
         return self.email
