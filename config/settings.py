@@ -21,12 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-qc3$a2259_0=kyo5fhn5f*hrip5kz)8a)_)i07js-w-qui@tk_"
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -43,7 +38,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'drf_spectacular',
     'users.apps.UsersConfig',
-
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 MIDDLEWARE = [
@@ -158,3 +153,9 @@ SPECTACULAR_SETTINGS = {
 SECRET_KEY = config('SECRET_KEY')
 
 DEBUG = config('DEBUG', default=False, cast=bool)
+
+SIMPLE_JWT = {
+    # ... diğer ayarlar ...
+    'BLACKLIST_AFTER_ROTATION': True,
+    # ...
+}
