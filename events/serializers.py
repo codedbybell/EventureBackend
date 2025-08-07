@@ -6,7 +6,16 @@ class EventSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Event
-        fields = '__all__'
+        fields = [
+            'id',
+            'title',
+            'description',
+            'location',
+            'event_date',
+            'capacity',
+            'club_name',
+            'creator_username',
+        ]
 
 class BookingSerializer(serializers.ModelSerializer):
     username = serializers.ReadOnlyField(source='user.username')
