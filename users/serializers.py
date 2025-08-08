@@ -9,31 +9,22 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     Yeni kullanıcı kaydı için kullanılan serializer.
     Sadece gerekli alanları (isim, e-posta, şifre) ister.
     """
-    # Şifre doğrulaması için bu alan zorunludur.
     password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True, label="Confirm Password")
 
     class Meta:
         model = CustomUser
-
-        # --- DOĞRU FİELDS LİSTESİ BURADA ---
-        # Kayıt olurken kullanıcıdan sadece bu bilgileri istiyoruz.
         fields = ['email', 'password', 'password2', 'first_name', 'last_name']
-
         extra_kwargs = {
-            # 'password' alanının API cevaplarında asla geri dönmemesini sağlar.
             'password': {'write_only': True}
         }
 
     def validate(self, attrs):
-        # Şifrelerin eşleşip eşleşmediğini kontrol eder.
         if attrs['password'] != attrs['password2']:
             raise serializers.ValidationError({"password": "Şifreler uyuşmuyor."})
         return attrs
 
     def create(self, validated_data):
-        # 'password2' alanını modelde olmadığı için veriden çıkarıyoruz.
         validated_data.pop('password2')
-        # Modelimizin kendi create_user metodu ile şifreyi hashleyerek kullanıcıyı oluşturuyoruz.
         user = CustomUser.objects.create_user(**validated_data)
         return user
 
@@ -43,10 +34,16 @@ class UserDetailSerializer(serializers.ModelSerializer):
     Giriş yapmış kullanıcının profil bilgilerini göstermek ve güncellemek için kullanılır.
     Hassas olmayan tüm kullanıcı bilgilerini içerir.
     """
+    # --- YENİ EKLENEN KISIM BURASI ---
+    # DRF'e, 'profile_picture' alanının bir resim dosyası olduğunu ve
+    # PUT/PATCH isteklerinde bu dosyanın gönderilebileceğini söylüyoruz.
+    # 'required=False' ve 'allow_null=True' ayarları, kullanıcının resim
+    # yüklemek zorunda olmadığını veya mevcut resmini silebileceğini belirtir.
+    profile_picture = serializers.ImageField(required=False, allow_null=True)
+    # --- YENİ EKLENEN KISIM SONU ---
 
     class Meta:
         model = CustomUser
-        # Kullanıcının profilinde görünecek ve güncellenebilecek tüm alanlar.
         fields = [
             'id',
             'email',
@@ -55,9 +52,14 @@ class UserDetailSerializer(serializers.ModelSerializer):
             'university',
             'department',
             'grade',
-            'profile_picture',
+            'profile_picture', # Bu alanın listede olması önemli
             'bio'
         ]
+        # --- ÖNERİLEN EKLEME ---
+        # Güvenlik için, profil güncellenirken kullanıcının kendi e-postasını
+        # veya ID'sini değiştirmesini engelliyoruz.
+        read_only_fields = ['id', 'email']
+        # --- ÖNERİLEN EKLEME SONU ---
 
 
 class ChangePasswordSerializer(serializers.Serializer):
