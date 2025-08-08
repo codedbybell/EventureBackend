@@ -10,35 +10,49 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os # os modülünü import ediyoruz
 from pathlib import Path
 from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# --- GÜVENLİK AYARLARI ---
+# .env dosyasından okunur. Lütfen projenizin ana dizininde bir .env dosyası oluşturun.
+# Örnek .env içeriği:
+# SECRET_KEY=your_super_secret_key_here
+# DEBUG=True
+SECRET_KEY = config('SECRET_KEY')
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
+DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = ['*']
 
 
-# Application definition
+# DEBUG=True iken geliştirme sunucusunun tüm IP'lerden erişilebilir olması için
+# Veya kendi yerel IP adresinizi ekleyebilirsiniz.
+ALLOWED_HOSTS = ['*'] # Geliştirme için '*' kullanılabilir. Prodüksiyonda alan adınızı yazın.
 
+
+# --- UYGULAMA TANIMLARI ---
 INSTALLED_APPS = [
+    # Django'nun kendi uygulamaları
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "events",
+
+    # Üçüncü parti uygulamalar
     "rest_framework",
     'rest_framework_simplejwt',
     'drf_spectacular',
+
+    "events",
     'users.apps.UsersConfig',
     'rest_framework_simplejwt.token_blacklist',
+
 ]
 
 MIDDLEWARE = [
@@ -71,9 +85,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
+# --- VERİTABANI AYARLARI ---
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -82,72 +94,67 @@ DATABASES = {
 }
 
 
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
+# --- KULLANICI MODELİ VE ŞİFRE DOĞRULAMA ---
+AUTH_USER_MODEL = 'users.CustomUser'
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
-
+# --- ULUSLARARASILAŞTIRMA ---
 LANGUAGE_CODE = "en-us"
-
 TIME_ZONE = "UTC"
-
 USE_I18N = True
-
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
+# --- STATİK VE MEDYA DOSYALARI ---
 
-STATIC_URL = "static/"
+# Statik dosyaların (CSS, JavaScript) sunulacağı URL
+STATIC_URL = "/static/"
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+# Kullanıcı tarafından yüklenen medya dosyalarının (resimler) sunulacağı URL
+# Örn: http://localhost:8000/media/event_images/my_image.jpg
+MEDIA_URL = "/media/"
 
+# Medya dosyalarının sunucuda fiziksel olarak saklanacağı klasörün yolu
+# Proje ana dizininde 'media' adında bir klasör oluşturur.
+MEDIA_ROOT = BASE_DIR / 'media'
+
+
+# --- OTOMATİK BİRİNCİL ANAHTAR TİPİ ---
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-AUTH_USER_MODEL = 'users.CustomUser'
 
-# config/settings.py
-
-# ... dosyanın en altına
-
+# --- DJANGO REST FRAMEWORK AYARLARI ---
 REST_FRAMEWORK = {
-    # Varsayılan olarak tüm endpointlerin giriş yapmış olmayı gerektirmesini sağlar.
-    # 'permission_classes': [
-    #     'rest_framework.permissions.IsAuthenticated',
-    # ],
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        # API'mızın JWT ile çalışacağını belirtiyoruz.
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
     # Otomatik dokümantasyon için şema ayarı
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+
+    # API'mızın varsayılan olarak JWT ile kimlik doğrulama yapacağını belirtiyoruz.
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+
+    # Varsayılan olarak tüm endpointlerin en azından okunabilir olmasını sağlar.
+    # Spesifik view'larda daha kısıtlayıcı izinler belirleyebilirsiniz.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ]
 }
 
-# drf-spectacular için ayarlar
+
+# --- DRF-SPECTACULAR AYARLARI (API DOKÜMANTASYONU) ---
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Kampüs Etkinlik Platformu API',
+    'TITLE': 'Eventure Platform API',
     'DESCRIPTION': 'Kampüs Etkinlik Platformu için geliştirilen REST API dokümantasyonu.',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+
 }
 
 SECRET_KEY = config('SECRET_KEY')
@@ -161,3 +168,4 @@ SIMPLE_JWT = {
 }
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
