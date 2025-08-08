@@ -2,15 +2,34 @@
 
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+# users/models.py
+
+from django.db import models
+from django.contrib.auth.models import AbstractUser
+from .managers import CustomUserManager # Yeni manager'ımızı import ediyoruz
 
 class CustomUser(AbstractUser):
-    # AbstractUser'dan gelen standart alanlar: username, email, password, first_name, last_name...
+    # Username alanını artık kullanmayacağımız için kaldırıyoruz.
+    username = None
+    # Email alanını birincil anahtar ve benzersiz yapıyoruz.
+    email = models.EmailField('email address', unique=True)
 
-    # Bizim eklediğimiz alanlar
+    # Django'ya giriş için hangi alanı kullanacağını söylüyoruz.
+    USERNAME_FIELD = 'email'
+    # createsuperuser komutunda sorulacak zorunlu alanlar.
+    # Email ve password zaten varsayılan olarak sorulur.
+    REQUIRED_FIELDS = []
+
+    # Modelimizin özel manager'ımızı kullanmasını sağlıyoruz.
+    objects = CustomUserManager()
+
+    # Diğer alanlar aynı kalabilir.
     university = models.CharField(max_length=150, blank=True, null=True, verbose_name="Üniversite")
     department = models.CharField(max_length=150, blank=True, null=True, verbose_name="Bölüm")
     grade = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name="Sınıf")
-    # profile_picture = models.ImageField(...) -> Profil fotoğrafını daha sonra ekleyebiliriz.
+
+    profile_picture = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
+    bio = models.TextField(max_length=250, blank=True, null=True)
 
     def __str__(self):
-        return self.username
+        return self.email

@@ -24,8 +24,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # DEBUG=True
 SECRET_KEY = config('SECRET_KEY')
 
-# Geliştirme ortamı için DEBUG=True, canlı sunucu için DEBUG=False olmalıdır.
+
 DEBUG = config('DEBUG', default=False, cast=bool)
+ALLOWED_HOSTS = ['*']
+
 
 # DEBUG=True iken geliştirme sunucusunun tüm IP'lerden erişilebilir olması için
 # Veya kendi yerel IP adresinizi ekleyebilirsiniz.
@@ -47,9 +49,10 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'drf_spectacular',
 
-    # Kendi uygulamalarımız
-    'users.apps.UsersConfig',
     "events",
+    'users.apps.UsersConfig',
+    'rest_framework_simplejwt.token_blacklist',
+
 ]
 
 MIDDLEWARE = [
@@ -151,4 +154,18 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'Kampüs Etkinlik Platformu için geliştirilen REST API dokümantasyonu.',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+
 }
+
+SECRET_KEY = config('SECRET_KEY')
+
+DEBUG = config('DEBUG', default=False, cast=bool)
+
+SIMPLE_JWT = {
+    # ... diğer ayarlar ...
+    'BLACKLIST_AFTER_ROTATION': True,
+    # ...
+}
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
