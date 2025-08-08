@@ -2,8 +2,11 @@
 
 from rest_framework import generics
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework_simplejwt.views import TokenObtainPairView
+
 from .models import CustomUser
-from .serializers import UserRegisterSerializer, UserDetailSerializer, UserDetailSerializer, ChangePasswordSerializer
+from .serializers import UserRegisterSerializer, UserDetailSerializer, UserDetailSerializer, ChangePasswordSerializer, \
+    MyTokenObtainPairSerializer
 from rest_framework import generics, status
 from rest_framework.response import Response
 
@@ -13,7 +16,12 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = (AllowAny,) # Herkesin bu endpoint'e erişimine izin ver (kayıt olmak için)
     serializer_class = UserRegisterSerializer
 
-# /api/profile/ endpoint'i için
+class MyTokenObtainPairView(TokenObtainPairView):
+    """
+    Standart token alma view'ını, bizim email ile çalışan serializer'ımızla kullanır.
+    """
+    serializer_class = MyTokenObtainPairSerializer
+
 class ProfileView(generics.RetrieveUpdateAPIView):
     queryset = CustomUser.objects.all()
     permission_classes = (IsAuthenticated,) # Sadece giriş yapmış kullanıcılar erişebilir

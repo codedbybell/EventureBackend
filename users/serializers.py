@@ -1,7 +1,9 @@
 # users/serializers.py
-
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import CustomUser
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework.exceptions import AuthenticationFailed
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
@@ -87,3 +89,45 @@ class ChangePasswordSerializer(serializers.Serializer):
         user.set_password(password)
         user.save()
         return user
+
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        # Token'a ekstra bilgiler eklemek istersen burayı kullanabilirsin
+        # token['email'] = user.email
+        return token
+
+    def validate(self, attrs):
+        print(attrs)
+        email = attrs.get('email')
+        password = attrs.get('password')
+
+        User = get_user_model()  # CustomUser modelini almanın en doğru yolu
+
+        try:
+            # E-posta ile kullanıcıyı bul (büyük/küçük harf duyarsız)
+            user = User.objects.get(email__iexact=email)
+        except User.DoesNotExist:
+            # Kullanıcı yoksa, 'detail' içeren bir hata fırlat
+            raise AuthenticationFailed('Bu e-posta adresi ile kayıtlı bir hesap bulunamadı.')
+
+        # Kullanıcının şifresini kontrol et
+        if not user.check_password(password):
+            # Şifre yanlışsa, 'detail' içeren bir hata fırlat
+            raise AuthenticationFailed('Hatalı şifre. Lütfen tekrar deneyin.')
+
+        # Kullanıcının hesabı aktif mi diye kontrol et
+        if not user.is_active:
+            raise AuthenticationFailed('Bu hesap aktif değil.')
+
+        # Tüm kontrollerden geçtiyse, token'ları oluştur
+        refresh = self.get_token(user)
+
+        data = {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }
+
+        return data

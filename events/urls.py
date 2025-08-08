@@ -1,10 +1,12 @@
+# events/urls.py (Sadece API için)
+
 from django.urls import path
 from .views import (
     EventListCreateView, EventDetailView, BookEventView, UnBookEventView,
     UserEventsView, CategoryListAPIView, PopularEventsAPIView,
 )
 
-app_name = 'events'
+# app_name = 'events'  <<< BU SATIRI SİLİYORUZ VEYA YORUMA ALIYORUZ
 
 urlpatterns = [
     # Ana URL: /api/events/
@@ -13,7 +15,7 @@ urlpatterns = [
     # URL: /api/events/popular/
     path('popular/', PopularEventsAPIView.as_view(), name='popular-events'),
 
-    # URL: /api/events/categories/ <<< KATEGORİLER BURADA
+    # URL: /api/events/categories/
     path('categories/', CategoryListAPIView.as_view(), name='category-list'),
 
     # URL: /api/events/1/

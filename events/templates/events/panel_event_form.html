@@ -1,0 +1,51 @@
+{% extends 'events/base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2">{{ page_title }}</h1>
+    <a href="{% url 'events:panel-event-list' %}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Geri Dön
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <!-- 'enctype' resim/dosya yükleme işlemleri için zorunludur! -->
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Formdaki genel hataları göstermek için -->
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <!-- Form alanlarını döngü ile oluşturma -->
+            {% for field in form %}
+                <div class="mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    
+                    {{ field }}
+                    
+                    {% if field.help_text %}
+                        <div class="form-text">{{ field.help_text }}</div>
+                    {% endif %}
+                    
+                    {% for error in field.errors %}
+                        <div class="alert alert-danger mt-1 p-2">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            
+            <hr>
+
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-circle"></i> Kaydet
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

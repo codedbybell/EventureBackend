@@ -10,7 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
-import os # os modülünü import ediyoruz
+import os
 from pathlib import Path
 from decouple import config
 
@@ -18,19 +18,8 @@ from decouple import config
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # --- GÜVENLİK AYARLARI ---
-# .env dosyasından okunur. Lütfen projenizin ana dizininde bir .env dosyası oluşturun.
-# Örnek .env içeriği:
-# SECRET_KEY=your_super_secret_key_here
-# DEBUG=True
 SECRET_KEY = config('SECRET_KEY')
-
-
 DEBUG = config('DEBUG', default=False, cast=bool)
-ALLOWED_HOSTS = ['*']
-
-
-# DEBUG=True iken geliştirme sunucusunun tüm IP'lerden erişilebilir olması için
-# Veya kendi yerel IP adresinizi ekleyebilirsiniz.
 ALLOWED_HOSTS = ['*'] # Geliştirme için '*' kullanılabilir. Prodüksiyonda alan adınızı yazın.
 
 
@@ -48,11 +37,11 @@ INSTALLED_APPS = [
     "rest_framework",
     'rest_framework_simplejwt',
     'drf_spectacular',
-
-    "events",
-    'users.apps.UsersConfig',
     'rest_framework_simplejwt.token_blacklist',
 
+    # Kendi uygulamalarımız
+    'events.apps.EventsConfig',   # <<< YAPILAN DEĞİŞİKLİK BURADA
+    'users.apps.UsersConfig',
 ]
 
 MIDDLEWARE = [
@@ -113,16 +102,8 @@ USE_TZ = True
 
 
 # --- STATİK VE MEDYA DOSYALARI ---
-
-# Statik dosyaların (CSS, JavaScript) sunulacağı URL
 STATIC_URL = "/static/"
-
-# Kullanıcı tarafından yüklenen medya dosyalarının (resimler) sunulacağı URL
-# Örn: http://localhost:8000/media/event_images/my_image.jpg
 MEDIA_URL = "/media/"
-
-# Medya dosyalarının sunucuda fiziksel olarak saklanacağı klasörün yolu
-# Proje ana dizininde 'media' adında bir klasör oluşturur.
 MEDIA_ROOT = BASE_DIR / 'media'
 
 
@@ -132,16 +113,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # --- DJANGO REST FRAMEWORK AYARLARI ---
 REST_FRAMEWORK = {
-    # Otomatik dokümantasyon için şema ayarı
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-
-    # API'mızın varsayılan olarak JWT ile kimlik doğrulama yapacağını belirtiyoruz.
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
-
-    # Varsayılan olarak tüm endpointlerin en azından okunabilir olmasını sağlar.
-    # Spesifik view'larda daha kısıtlayıcı izinler belirleyebilirsiniz.
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ]
@@ -154,18 +129,10 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'Kampüs Etkinlik Platformu için geliştirilen REST API dokümantasyonu.',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
-
 }
 
-SECRET_KEY = config('SECRET_KEY')
 
-DEBUG = config('DEBUG', default=False, cast=bool)
 
 SIMPLE_JWT = {
-    # ... diğer ayarlar ...
     'BLACKLIST_AFTER_ROTATION': True,
-    # ...
 }
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
