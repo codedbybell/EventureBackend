@@ -77,10 +77,13 @@ class UnBookEventView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, event_id):
-        event = get_object_or_404(Event, id=event_id)
-        booking = get_object_or_404(Booking, event=event, user=request.user)
-        booking.delete()
-        return Response({"detail": "Kayıt iptal edildi."}, status=status.HTTP_204_NO_CONTENT)
+        try:
+            event = get_object_or_404(Event, id=event_id)
+            booking = get_object_or_404(Booking, event=event, user=request.user)
+            booking.delete()
+            return Response({"detail": "Kayıt iptal edildi."}, status=status.HTTP_200_OK)
+        except Booking.DoesNotExist:
+            return Response({"detail": "Kayıt Bulunamadı"}, status=status.HTTP_200_OK)
 
 
 class PopularEventsAPIView(generics.ListAPIView):

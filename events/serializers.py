@@ -13,14 +13,11 @@ class CategorySerializer(serializers.ModelSerializer):
 
 # --- EventSerializer (Nihai ve Tam Hali) ---
 class EventSerializer(serializers.ModelSerializer):
-    # 1. Organizatörün kullanıcı adını string olarak ekliyoruz.
     organizer_username = serializers.ReadOnlyField(source='organizer.username')
-
-    # 2. Kategorinin adını string olarak ekliyoruz.
     category_name = serializers.ReadOnlyField(source='category.name')
-
-    # 3. Virgülle ayrılmış 'tags' metnini bir listeye dönüştürüyoruz.
     tags = serializers.SerializerMethodField()
+    bookings_count = serializers.SerializerMethodField()
+    is_booked = serializers.SerializerMethodField()
 
     class Meta:
         model = Event
@@ -39,18 +36,30 @@ class EventSerializer(serializers.ModelSerializer):
             'category_name',       # Category Adı (string)
             'bookings_count',      # Rezervasyon Sayısı (int)
             'tags',                # Etiketler (list of strings)
+            'is_booked',
         ]
 
     # 'tags' alanını dolduracak metod
     def get_tags(self, obj):
-        # Eğer 'tags' alanı dolu ve bir string ise:
         if obj.tags and isinstance(obj.tags, str):
-            # Virgüllere göre ayır, her birinin başındaki/sonundaki boşlukları sil
-            # ve boş etiketleri (örn: "müzik,,spor") listeden çıkar.
             return [tag.strip() for tag in obj.tags.split(',') if tag.strip()]
-        # Değilse, boş bir liste döndür.
         return []
 
+    def get_bookings_count(self, obj):
+        return obj.bookings.count()
+
+    def get_is_booked(self, obj):
+        # 'request' nesnesini serializer'ın context'inden alıyoruz.
+        request = self.context.get('request')
+
+        # Eğer istek yapan bir kullanıcı yoksa veya kullanıcı anonim ise (giriş yapmamışsa),
+        # hiçbir etkinliğe kayıtlı değildir.
+        if not request or not request.user.is_authenticated:
+            return False
+
+        # Kullanıcının bu etkinliğe ('obj') ait bir rezervasyonu olup olmadığını kontrol et.
+        # .exists() sorgusu, veritabanına sadece var olup olmadığını sorar, çok verimlidir.
+        return obj.bookings.filter(user=request.user).exists()
 
 # --- BookingSerializer ---
 # Bu serializer zaten iyi görünüyor, olduğu gibi kalabilir.

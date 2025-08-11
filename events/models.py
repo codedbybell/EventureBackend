@@ -43,7 +43,6 @@ class Event(models.Model):
     date = models.DateField()
     time = models.TimeField()
     capacity = models.PositiveIntegerField(default=0, help_text="Etkinliğin maksimum katılımcı sayısı")
-    bookings_count = models.PositiveIntegerField(default=0, editable=False) # Admin panelinde düzenlenemez
     tags = models.CharField(
         max_length=255,
         blank=True,
