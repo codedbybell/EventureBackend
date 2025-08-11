@@ -30,11 +30,20 @@ class EventListCreateView(generics.ListCreateAPIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
+
         queryset = Event.objects.all().select_related('organizer', 'category').order_by('-created_at')
-        date = self.request.query_params.get('date', None)
-        now = timezone.now().date()
-        if date == 'upcoming':
+
+        category_name = self.request.query_params.get('category', None)
+
+        date_filter = self.request.query_params.get('date', None)
+
+        if category_name is not None:
+            queryset = queryset.filter(category__name=category_name)
+
+        if date_filter == 'upcoming':
+            now = timezone.now()
             queryset = queryset.filter(date__gte=now)
+
         return queryset
 
     def perform_create(self, serializer):
